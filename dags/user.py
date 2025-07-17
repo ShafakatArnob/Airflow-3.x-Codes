@@ -26,3 +26,36 @@ def user_location(user: Asset, context: Context) -> dict[str]:
         include_prior_dates=True  # to fetch the latest XCom returned by the 'user' asset, if that asset has run before
     )
     return user_data['results'][0]['location']
+
+
+@asset(
+    name="user_login",
+    schedule=user
+)
+def user_login(user: Asset, context: Context) -> dict[str]:
+    user_data = context['ti'].xcom_pull(
+        dag_id=user.name,
+        task_ids=user.name,
+        include_prior_dates=True
+    )
+    return user_data['results'][0]['login']
+
+
+# creating multi-asset at once which run both 'user_location' and 'user_login' assets when 'user' asset materializes
+# @asset.multi(
+#     schedule=user,
+#     outlets=[
+#         Asset(name="user_location"),
+#         Asset(name="user_login"),
+#     ]
+# )
+# def user_info(user: Asset, context: Context) -> list[dict[str]]:
+#     user_data = context['ti'].xcom_pull(
+#         dag_id=user.name,
+#         task_ids=user.name,
+#         include_prior_dates=True
+#     )
+#     return [
+#         user_data['results'][0]['location'],
+#         user_data['results'][0]['login']
+#     ]
